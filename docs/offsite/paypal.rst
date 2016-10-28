@@ -52,9 +52,9 @@ In urls.py::
 
   from billing import get_integration
   pay_pal = get_integration("pay_pal")
-  urlpatterns += patterns('',
+  urlpatterns += [
     (r'^paypal-ipn-handler/', include(pay_pal.urls)),
-  )
+  ]
 
 In views.py::
 

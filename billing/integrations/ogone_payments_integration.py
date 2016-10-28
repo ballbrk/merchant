@@ -2,7 +2,7 @@
 from billing import Integration, IntegrationNotConfigured
 from django.conf import settings
 
-from django.conf.urls import patterns, url
+from django.conf.urls import url
 from django.template import RequestContext
 from django.http import HttpResponse
 from django.shortcuts import render_to_response
@@ -88,9 +88,9 @@ class OgonePaymentsIntegration(Integration):
                                   context_instance=RequestContext(request))
 
     def get_urls(self):
-        urlpatterns = patterns('',
-            url('^ogone_notify_handler/$', self.ogone_notify_handler, name="ogone_notify_handler"),
-        )
+        urlpatterns = [
+            url('^ogone_notify_handler/$', self.ogone_notify_handler, name="ogone_notify_handler")
+        ]
         return urlpatterns
 
     def add_fields(self, params):

@@ -1,7 +1,7 @@
 from billing.integration import Integration, IntegrationNotConfigured
 from django.conf import settings
 from boto.fps.connection import FPSConnection
-from django.conf.urls import patterns, url
+from django.conf.urls import url
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
@@ -142,10 +142,10 @@ class AmazonFpsIntegration(Integration):
         return {"status": resp.CancelResult.TransactionStatus, "response": resp.CancelResult}
 
     def get_urls(self):
-        urlpatterns = patterns('',
+        urlpatterns = [
            url(r'^fps-notify-handler/$', self.fps_ipn_handler, name="fps_ipn_handler"),
-           url(r'^fps-return-url/$', self.fps_return_url, name="fps_return_url"),
-                               )
+           url(r'^fps-return-url/$', self.fps_return_url, name="fps_return_url")
+        ]
         return urlpatterns
 
     @csrf_exempt_m

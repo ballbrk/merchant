@@ -1,6 +1,6 @@
 from billing import Integration, get_gateway, IntegrationNotConfigured
 from django.conf import settings
-from django.conf.urls import patterns, url
+from django.conf.urls import url
 from billing.forms.stripe_forms import StripeForm
 
 
@@ -31,7 +31,7 @@ class StripeIntegration(Integration):
         raise NotImplementedError
 
     def get_urls(self):
-        urlpatterns = patterns('',
+        urlpatterns = [
            url('^stripe_token/$', self.transaction, name="stripe_transaction")
-        )
+        ]
         return urlpatterns

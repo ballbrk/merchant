@@ -31,11 +31,11 @@ Example
 In urls.py::
 
   world_pay = get_integration("world_pay")
-  urlpatterns += patterns('',
+  urlpatterns += [
     (r'^world_pay/', include(world_pay.urls)),
     # You'll have to register /world_pay/rbs-notify-handler/ in the
     # WorldPay admin dashboard for the notification URL
-  )
+  ]
 
 In views.py::
 

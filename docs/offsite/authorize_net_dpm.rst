@@ -35,9 +35,9 @@ Here are the methods and attributes implemented on the ``AuthorizeNetDpmIntegrat
 
      integration = get_integration("authorize_net_dpm")
 
-     urlpatterns += patterns('',
+     urlpatterns += [
         (r'^authorize_net/', include(integration.urls)),
-     )
+     ]
 
 * ``authorize_net_notify_handler(self, request)``: The view method that handles the
   verification of the response, firing of the signal and sends out the redirect
@@ -67,9 +67,9 @@ Example:
    In the urls.py::
 
       int_obj = get_integration("authorize_net_dpm")
-      urlpatterns += patterns('',
+      urlpatterns += [
          (r'^authorize_net/', include(int_obj.urls)),
-      )
+      ]
       
    In the template::
 

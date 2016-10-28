@@ -1,7 +1,6 @@
 from billing.integration import Integration
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
-from django.conf.urls import patterns
 from billing.signals import transaction_was_successful, transaction_was_unsuccessful
 from django.http import HttpResponse
 from billing.models.world_pay_models import WorldPayResponse
@@ -36,9 +35,9 @@ class WorldPayIntegration(Integration):
             self.fields.update({"testMode": 100})
 
     def get_urls(self):
-        urlpatterns = patterns('',
-           (r'^rbs-notify-handler/$', self.notify_handler),
-                               )
+        urlpatterns = [
+           (r'^rbs-notify-handler/$', self.notify_handler)
+        ]
         return urlpatterns
 
     @property

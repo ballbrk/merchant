@@ -89,11 +89,11 @@ In urls.py::
 
     from billing import get_integration
     amazon_fps = get_integration("fps")
-    urlpatterns += patterns('',
+    urlpatterns += [
       (r'^amazon_fps/', include(amazon_fps.urls)),
       # You'll have to register /amazon_fps/fps-notify-handler/ in the
       # Amazon FPS admin dashboard for the notification URL
-    )
+    ]
 
 
 In views.py::

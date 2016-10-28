@@ -1,6 +1,5 @@
 from importlib import import_module
 from django.conf import settings
-from django.conf.urls import patterns
 
 
 class IntegrationModuleNotFound(Exception):
@@ -47,7 +46,7 @@ class Integration(object):
 
     def get_urls(self):
         # Method must be subclassed
-        urlpatterns = patterns('')
+        urlpatterns = []
         return urlpatterns
 
     @property

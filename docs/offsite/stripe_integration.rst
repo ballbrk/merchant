@@ -27,9 +27,9 @@ Here are the methods and attributes implemented on the ``StripeIntegration`` cla
 
      stripe_obj = get_integration("stripe")
 
-     urlpatterns += patterns('',
+     urlpatterns += [
         (r'^stripe/', include(stripe_obj.urls)),
-     )
+     ]
 
 * ``transaction(self, request)``: The method that receives the Stripe Token after
   successfully validating with the Stripe servers. Needs to be subclassed to include
@@ -68,9 +68,9 @@ Example:
    In the urls.py::
 
       stripe_obj = get_integration("stripe_example")
-      urlpatterns += patterns('',
+      urlpatterns += [
          (r'^stripe/', include(stripe_obj.urls)),
-      )
+      ]
       
    In the template::
 
