@@ -14,7 +14,7 @@ class BillingIntegrationNode(template.Node):
                 int_obj.template, {
                     "integration": int_obj
                 },
-                context)
+                context=context)
         return form_str
 
 @register.tag
