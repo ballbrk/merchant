@@ -36,6 +36,8 @@ class BraintreePaymentsGateway(Gateway):
         return "%s/%s" % (credit_card.month, credit_card.year)
 
     def _cc_cardholder_name(self, credit_card):
+        if credit_card.cardholders_name:
+            return credit_card.cardholders_name
         return "%s %s" % (credit_card.first_name, credit_card.last_name)
 
     def _build_request_hash(self, options):
@@ -123,9 +125,6 @@ class BraintreePaymentsGateway(Gateway):
             }
         else:
             request_hash["payment_method_token"] = credit_card
-
-        if not self.validate_card(credit_card):
-            raise InvalidCard("Invalid Card")
 
         request_hash = self._build_request_hash(options)
         request_hash["amount"] = money
