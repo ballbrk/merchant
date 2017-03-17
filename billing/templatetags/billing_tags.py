@@ -10,11 +10,12 @@ class BillingIntegrationNode(template.Node):
 
     def render(self, context):
         int_obj = self.integration.resolve(context)
+        context_dict = context.update({
+            "integration": int_obj
+        })
         form_str = render_to_string(
-                int_obj.template, {
-                    "integration": int_obj
-                },
-                context)
+                int_obj.template,
+                context=context_dict)
         return form_str
 
 @register.tag
