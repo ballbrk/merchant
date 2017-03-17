@@ -104,6 +104,11 @@ class JCB(CreditCard):
     regexp = re.compile('^35(28|29|[3-8]\d)\d{12}$')
 
 
+class UnionPay(CreditCard):
+    card_name = "UnionPay"
+    regexp = re.compile('^62[0-5]\d{13,16}$')
+
+
 class Switch(CreditCard):
     # Debit Card
     card_name = "Switch"
@@ -140,7 +145,7 @@ class Laser(CreditCard):
 
 # A few helpful (probably) attributes
 all_credit_cards = [Visa, MasterCard, Discover, AmericanExpress,
-                    DinersClub, JCB]
+                    DinersClub, JCB, UnionPay]
 
 all_debit_cards = [Switch, Solo, Dankort, Maestro,
                     Forbrugsforeningen, Laser]
