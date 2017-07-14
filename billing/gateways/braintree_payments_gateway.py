@@ -36,6 +36,8 @@ class BraintreePaymentsGateway(Gateway):
         return "%s/%s" % (credit_card.month, credit_card.year)
 
     def _cc_cardholder_name(self, credit_card):
+        if credit_card.cardholders_name:
+            return credit_card.cardholders_name
         return "%s %s" % (credit_card.first_name, credit_card.last_name)
 
     def _build_request_hash(self, options):
