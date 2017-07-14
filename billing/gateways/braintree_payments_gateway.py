@@ -114,6 +114,8 @@ class BraintreePaymentsGateway(Gateway):
         if options.get("merchant_account_id"):
             request_hash["merchant_account_id"] = options.get("merchant_account_id")
 
+        request_hash = self._build_request_hash(options)
+        request_hash["amount"] = money
         if isinstance(credit_card, CreditCard):
             request_hash["credit_card"] = {
                 "number": credit_card.number,
@@ -123,18 +125,6 @@ class BraintreePaymentsGateway(Gateway):
             }
         else:
             request_hash["payment_method_token"] = credit_card
-
-        if not self.validate_card(credit_card):
-            raise InvalidCard("Invalid Card")
-
-        request_hash = self._build_request_hash(options)
-        request_hash["amount"] = money
-        request_hash["credit_card"] = {
-            "number": credit_card.number,
-            "expiration_date": self._cc_expiration_date(credit_card),
-            "cardholder_name": self._cc_cardholder_name(credit_card),
-            "cvv": credit_card.verification_value,
-            }
         braintree_options = options.get("options", {})
         braintree_options.update({"submit_for_settlement": True})
         request_hash.update({
