@@ -26,7 +26,7 @@ class BraintreePaymentsGateway(Gateway):
                                        "configured." % self.display_name)
         self.braintree_settings = merchant_settings['braintree_payments']
         self.configuration = braintree.Configuration(
-            enviroment=env,
+            environment=env,
             merchant_id=self.braintree_settings['MERCHANT_ACCOUNT_ID'],
             public_key=self.braintree_settings['PUBLIC_KEY'],
             private_key=self.braintree_settings['PRIVATE_KEY']
