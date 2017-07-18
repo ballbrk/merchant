@@ -127,9 +127,9 @@ class StripeGateway(Gateway):
     def credit(self, identification, money=None, options=None):
         try:
             charge = self.stripe.Charge.retrieve(identification)
-            response = charge.refund(amount=money)
             if money:
                 money = int(money * 100)
+            response = charge.refund(amount=money)
             transaction_was_successful.send(sender=self,
                                             type="credit",
                                             response=response)
