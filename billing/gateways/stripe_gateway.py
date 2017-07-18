@@ -24,6 +24,10 @@ class StripeGateway(Gateway):
 
     def purchase(self, amount, credit_card, options=None):
         card = credit_card
+        currency = self.default_currency.lower()
+        if options and options.get('currency', False):
+            currency = options['currency']
+        customer = options or options.get('customer', None)
         if isinstance(credit_card, CreditCard):
             if not self.validate_card(credit_card):
                 raise InvalidCard("Invalid Card")
@@ -36,8 +40,9 @@ class StripeGateway(Gateway):
         try:
             response = self.stripe.Charge.create(
                 amount=int(amount * 100),
-                currency=self.default_currency.lower(),
-                card=card)
+                currency=currency,
+                card=card,
+                customer=customer)
         except self.stripe.CardError as error:
             transaction_was_unsuccessful.send(sender=self,
                                               type="purchase",
@@ -127,6 +132,8 @@ class StripeGateway(Gateway):
     def credit(self, identification, money=None, options=None):
         try:
             charge = self.stripe.Charge.retrieve(identification)
+            if money:
+                money = int(money * 100)
             response = charge.refund(amount=money)
             transaction_was_successful.send(sender=self,
                                             type="credit",
@@ -140,6 +147,9 @@ class StripeGateway(Gateway):
 
     def authorize(self, money, credit_card, options=None):
         card = credit_card
+        currency = self.default_currency.lower()
+        if options and options.get('currency', False):
+            currency = options['currency']
         if isinstance(credit_card, CreditCard):
             if not self.validate_card(credit_card):
                 raise InvalidCard("Invalid Card")
@@ -153,6 +163,7 @@ class StripeGateway(Gateway):
             token = self.stripe.Token.create(
                 card=card,
                 amount=int(money * 100),
+                currency=currency
             )
             transaction_was_successful.send(sender=self,
                                             type="authorize",
@@ -165,11 +176,14 @@ class StripeGateway(Gateway):
             return {"status": "FAILURE", "response": error}
 
     def capture(self, money, authorization, options=None):
+        currency = self.default_currency.lower()
+        if options and options.get('currency', False):
+            currency = options['currency']
         try:
             response = self.stripe.Charge.create(
                 amount=int(money * 100),
                 card=authorization,
-                currency=self.default_currency.lower()
+                currency=currency
             )
             transaction_was_successful.send(sender=self,
                                             type="capture",
