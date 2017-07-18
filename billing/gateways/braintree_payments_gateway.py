@@ -24,13 +24,14 @@ class BraintreePaymentsGateway(Gateway):
         if not merchant_settings or not merchant_settings.get("braintree_payments"):
             raise GatewayNotConfigured("The '%s' gateway is not correctly "
                                        "configured." % self.display_name)
-        braintree_settings = merchant_settings['braintree_payments']
-        braintree.Configuration.configure(
-            env,
-            braintree_settings['MERCHANT_ACCOUNT_ID'],
-            braintree_settings['PUBLIC_KEY'],
-            braintree_settings['PRIVATE_KEY']
-            )
+        self.braintree_settings = merchant_settings['braintree_payments']
+        self.configuration = braintree.Configuration(
+            enviroment=env,
+            merchant_id=self.braintree_settings['MERCHANT_ACCOUNT_ID'],
+            public_key=self.braintree_settings['PUBLIC_KEY'],
+            private_key=self.braintree_settings['PRIVATE_KEY']
+        )
+        self.braintree = braintree.BraintreeGateway(self.configuration)
 
     def _cc_expiration_date(self, credit_card):
         return "%s/%s" % (credit_card.month, credit_card.year)
@@ -132,7 +133,7 @@ class BraintreePaymentsGateway(Gateway):
         request_hash.update({
                 "options": braintree_options
                 })
-        response = braintree.Transaction.sale(request_hash)
+        response = self.braintree.Transaction.sale(request_hash)
         if response.is_success:
             status = "SUCCESS"
             transaction_was_successful.send(sender=self,
@@ -164,7 +165,7 @@ class BraintreePaymentsGateway(Gateway):
             request_hash.update({
                     "options": braintree_options
                     })
-        response = braintree.Transaction.sale(request_hash)
+        response = self.braintree.Transaction.sale(request_hash)
         if response.is_success:
             status = "SUCCESS"
             transaction_was_successful.send(sender=self,
@@ -178,7 +179,7 @@ class BraintreePaymentsGateway(Gateway):
         return {"status": status, "response": response}
 
     def capture(self, money, authorization, options=None):
-        response = braintree.Transaction.submit_for_settlement(authorization, money)
+        response = self.braintree.Transaction.submit_for_settlement(authorization, money)
         if response.is_success:
             status = "SUCCESS"
             transaction_was_successful.send(sender=self,
@@ -192,7 +193,7 @@ class BraintreePaymentsGateway(Gateway):
         return {"status": status, "response": response}
 
     def void(self, identification, options=None):
-        response = braintree.Transaction.void(identification)
+        response = self.braintree.Transaction.void(identification)
         if response.is_success:
             status = "SUCCESS"
             transaction_was_successful.send(sender=self,
@@ -206,7 +207,7 @@ class BraintreePaymentsGateway(Gateway):
         return {"status": status, "response": response}
 
     def credit(self, money, identification, options=None):
-        response = braintree.Transaction.refund(identification, money)
+        response = self.braintree.Transaction.refund(identification, money)
         if response.is_success:
             status = "SUCCESS"
             transaction_was_successful.send(sender=self,
@@ -231,7 +232,7 @@ class BraintreePaymentsGateway(Gateway):
         request_hash.update({
             "payment_method_token": payment_token,
             })
-        response = braintree.Subscription.create(request_hash)
+        response = self.braintree.Subscription.create(request_hash)
         if response.is_success:
             status = "SUCCESS"
             transaction_was_successful.send(sender=self,
@@ -258,7 +259,7 @@ class BraintreePaymentsGateway(Gateway):
             first_name = customer["name"]
             last_name = ""
 
-        search_resp = braintree.Customer.search(
+        search_resp = self.braintree.Customer.search(
             braintree.CustomerSearch.cardholder_name == credit_card.name,
             braintree.CustomerSearch.credit_card_number.starts_with(credit_card.number[:6]),
             braintree.CustomerSearch.credit_card_number.ends_with(credit_card.number[-4:]),
@@ -290,7 +291,7 @@ class BraintreePaymentsGateway(Gateway):
                 "phone": customer.get("phone", ""),
                 "credit_card": card_hash,
                 }
-            result = braintree.Customer.create(request_hash)
+            result = self.braintree.Customer.create(request_hash)
             if not result.is_success:
                 transaction_was_unsuccessful.send(sender=self,
                                                   type="store",
@@ -331,7 +332,7 @@ class BraintreePaymentsGateway(Gateway):
             card_hash["options"].update(options["options"])
         if request_hash:
             card_hash.update({"billing_address": request_hash})
-        response = braintree.Customer.update(customer.id, {
+        response = self.braintree.Customer.update(customer.id, {
                 "credit_card": card_hash,
                 })
         if response.is_success:
@@ -347,7 +348,7 @@ class BraintreePaymentsGateway(Gateway):
         return {"status": status, "response": response}
 
     def unstore(self, identification, options=None):
-        response = braintree.CreditCard.delete(identification)
+        response = self.braintree.CreditCard.delete(identification)
         if response.is_success:
             status = "SUCCESS"
             transaction_was_successful.send(sender=self,
