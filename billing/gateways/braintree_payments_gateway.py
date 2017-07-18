@@ -133,7 +133,7 @@ class BraintreePaymentsGateway(Gateway):
         request_hash.update({
                 "options": braintree_options
                 })
-        response = self.braintree.Transaction.sale(request_hash)
+        response = self.braintree.transaction.sale(request_hash)
         if response.is_success:
             status = "SUCCESS"
             transaction_was_successful.send(sender=self,
@@ -165,7 +165,7 @@ class BraintreePaymentsGateway(Gateway):
             request_hash.update({
                     "options": braintree_options
                     })
-        response = self.braintree.Transaction.sale(request_hash)
+        response = self.braintree.transaction.sale(request_hash)
         if response.is_success:
             status = "SUCCESS"
             transaction_was_successful.send(sender=self,
@@ -179,7 +179,7 @@ class BraintreePaymentsGateway(Gateway):
         return {"status": status, "response": response}
 
     def capture(self, money, authorization, options=None):
-        response = self.braintree.Transaction.submit_for_settlement(authorization, money)
+        response = self.braintree.transaction.submit_for_settlement(authorization, money)
         if response.is_success:
             status = "SUCCESS"
             transaction_was_successful.send(sender=self,
@@ -193,7 +193,7 @@ class BraintreePaymentsGateway(Gateway):
         return {"status": status, "response": response}
 
     def void(self, identification, options=None):
-        response = self.braintree.Transaction.void(identification)
+        response = self.braintree.transaction.void(identification)
         if response.is_success:
             status = "SUCCESS"
             transaction_was_successful.send(sender=self,
@@ -207,7 +207,7 @@ class BraintreePaymentsGateway(Gateway):
         return {"status": status, "response": response}
 
     def credit(self, money, identification, options=None):
-        response = self.braintree.Transaction.refund(identification, money)
+        response = self.braintree.transaction.refund(identification, money)
         if response.is_success:
             status = "SUCCESS"
             transaction_was_successful.send(sender=self,
@@ -232,7 +232,7 @@ class BraintreePaymentsGateway(Gateway):
         request_hash.update({
             "payment_method_token": payment_token,
             })
-        response = self.braintree.Subscription.create(request_hash)
+        response = self.braintree.subscription.create(request_hash)
         if response.is_success:
             status = "SUCCESS"
             transaction_was_successful.send(sender=self,
@@ -259,7 +259,7 @@ class BraintreePaymentsGateway(Gateway):
             first_name = customer["name"]
             last_name = ""
 
-        search_resp = self.braintree.Customer.search(
+        search_resp = self.braintree.customer.search(
             braintree.CustomerSearch.cardholder_name == credit_card.name,
             braintree.CustomerSearch.credit_card_number.starts_with(credit_card.number[:6]),
             braintree.CustomerSearch.credit_card_number.ends_with(credit_card.number[-4:]),
@@ -291,7 +291,7 @@ class BraintreePaymentsGateway(Gateway):
                 "phone": customer.get("phone", ""),
                 "credit_card": card_hash,
                 }
-            result = self.braintree.Customer.create(request_hash)
+            result = self.braintree.customer.create(request_hash)
             if not result.is_success:
                 transaction_was_unsuccessful.send(sender=self,
                                                   type="store",
@@ -332,7 +332,7 @@ class BraintreePaymentsGateway(Gateway):
             card_hash["options"].update(options["options"])
         if request_hash:
             card_hash.update({"billing_address": request_hash})
-        response = self.braintree.Customer.update(customer.id, {
+        response = self.braintree.customer.update(customer.id, {
                 "credit_card": card_hash,
                 })
         if response.is_success:
@@ -348,7 +348,7 @@ class BraintreePaymentsGateway(Gateway):
         return {"status": status, "response": response}
 
     def unstore(self, identification, options=None):
-        response = self.braintree.CreditCard.delete(identification)
+        response = self.braintree.credit_card.delete(identification)
         if response.is_success:
             status = "SUCCESS"
             transaction_was_successful.send(sender=self,
