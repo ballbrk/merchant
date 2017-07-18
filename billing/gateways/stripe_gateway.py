@@ -27,7 +27,7 @@ class StripeGateway(Gateway):
         currency = self.default_currency.lower()
         if options and options.get('currency', False):
             currency = options.pop('currency')
-        customer = options or options.pop('customer', None)
+        customer = options and options.pop('customer', None)
         if isinstance(credit_card, CreditCard):
             if not self.validate_card(credit_card):
                 raise InvalidCard("Invalid Card")
