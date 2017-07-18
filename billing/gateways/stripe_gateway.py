@@ -19,7 +19,7 @@ class StripeGateway(Gateway):
             raise GatewayNotConfigured("The '%s' gateway is not correctly "
                                        "configured." % self.display_name)
         stripe_settings = merchant_settings["stripe"]
-        stripe.api_key = stripe_settings['API_KEY']
+        self.api_key = stripe_settings['API_KEY']
         self.stripe = stripe
 
     def purchase(self, amount, credit_card, options=None):
@@ -42,7 +42,8 @@ class StripeGateway(Gateway):
                 amount=int(amount * 100),
                 currency=currency,
                 card=card,
-                customer=customer)
+                customer=customer,
+                api_key=self.api_key)
         except self.stripe.CardError as error:
             transaction_was_unsuccessful.send(sender=self,
                                               type="purchase",
@@ -65,7 +66,7 @@ class StripeGateway(Gateway):
                 'cvc': credit_card.verification_value
                 }
         try:
-            customer = self.stripe.Customer.create(card=card)
+            customer = self.stripe.Customer.create(card=card, api_key=self.api_key)
         except (self.stripe.CardError, self.stripe.InvalidRequestError) as error:
             transaction_was_unsuccessful.send(sender=self,
                                               type="store",
@@ -89,11 +90,12 @@ class StripeGateway(Gateway):
                 }
         try:
             plan_id = options['plan_id']
-            self.stripe.Plan.retrieve(options['plan_id'])
+            self.stripe.Plan.retrieve(options['plan_id'], api_key=self.api_key)
             try:
                 response = self.stripe.Customer.create(
                     card=card,
-                    plan=plan_id
+                    plan=plan_id,
+                    api_key=self.api_key
                 )
                 transaction_was_successful.send(sender=self,
                                                 type="recurring",
@@ -117,7 +119,7 @@ class StripeGateway(Gateway):
 
     def unstore(self, identification, options=None):
         try:
-            customer = self.stripe.Customer.retrieve(identification)
+            customer = self.stripe.Customer.retrieve(identification, api_key=self.api_key)
             response = customer.delete()
             transaction_was_successful.send(sender=self,
                                               type="unstore",
@@ -131,10 +133,10 @@ class StripeGateway(Gateway):
 
     def credit(self, identification, money=None, options=None):
         try:
-            charge = self.stripe.Charge.retrieve(identification)
+            charge = self.stripe.Charge.retrieve(identification, api_key=self.api_key)
             if money:
                 money = int(money * 100)
-            response = charge.refund(amount=money)
+            response = charge.refund(amount=money, api_key=self.api_key)
             transaction_was_successful.send(sender=self,
                                             type="credit",
                                             response=response)
@@ -163,7 +165,8 @@ class StripeGateway(Gateway):
             token = self.stripe.Token.create(
                 card=card,
                 amount=int(money * 100),
-                currency=currency
+                currency=currency,
+                api_key=self.api_key
             )
             transaction_was_successful.send(sender=self,
                                             type="authorize",
@@ -183,7 +186,8 @@ class StripeGateway(Gateway):
             response = self.stripe.Charge.create(
                 amount=int(money * 100),
                 card=authorization,
-                currency=currency
+                currency=currency,
+                api_key=self.api_key
             )
             transaction_was_successful.send(sender=self,
                                             type="capture",
