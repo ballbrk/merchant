@@ -26,8 +26,8 @@ class StripeGateway(Gateway):
         card = credit_card
         currency = self.default_currency.lower()
         if options and options.get('currency', False):
-            currency = options['currency']
-        customer = options or options.get('customer', None)
+            currency = options.pop('currency')
+        customer = options or options.pop('customer', None)
         if isinstance(credit_card, CreditCard):
             if not self.validate_card(credit_card):
                 raise InvalidCard("Invalid Card")
@@ -149,7 +149,7 @@ class StripeGateway(Gateway):
         card = credit_card
         currency = self.default_currency.lower()
         if options and options.get('currency', False):
-            currency = options['currency']
+            currency = options.pop('currency')
         if isinstance(credit_card, CreditCard):
             if not self.validate_card(credit_card):
                 raise InvalidCard("Invalid Card")
@@ -178,7 +178,7 @@ class StripeGateway(Gateway):
     def capture(self, money, authorization, options=None):
         currency = self.default_currency.lower()
         if options and options.get('currency', False):
-            currency = options['currency']
+            currency = options.pop('currency')
         try:
             response = self.stripe.Charge.create(
                 amount=int(money * 100),
