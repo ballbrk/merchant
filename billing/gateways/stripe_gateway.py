@@ -162,33 +162,27 @@ class StripeGateway(Gateway):
                 'cvc': credit_card.verification_value
                 }
         try:
-            token = self.stripe.Token.create(
-                card=card,
-                amount=int(money * 100),
-                currency=currency,
-                api_key=self.api_key
-            )
-            transaction_was_successful.send(sender=self,
-                                            type="authorize",
-                                            response=token)
-            return {'status': "SUCCESS", "response": token}
-        except self.stripe.InvalidRequestError as error:
-            transaction_was_unsuccessful.send(sender=self,
-                                              type="authorize",
-                                              response=error)
-            return {"status": "FAILURE", "response": error}
-
-    def capture(self, money, authorization, options=None):
-        currency = self.default_currency.lower()
-        if options and options.get('currency', False):
-            currency = options.pop('currency')
-        try:
             response = self.stripe.Charge.create(
                 amount=int(money * 100),
-                card=authorization,
                 currency=currency,
-                api_key=self.api_key
-            )
+                card=card,
+                capture=False,
+                api_key=self.api_key)
+            transaction_was_successful.send(sender=self,
+                                            type="authorize",
+                                            response=response)
+            return {'status': "SUCCESS", "response": response}
+        except self.stripe.CardError as error:
+            transaction_was_unsuccessful.send(sender=self,
+                                              type="purchase",
+                                              response=error)
+            return {'status': 'FAILURE', 'response': error}
+
+    def capture(self, money, identification, options=None):
+        try:
+            charge = self.stripe.Charge.retrieve(identification,
+                                                 api_key=self.api_key)
+            response = charge.capture(amount=int(money * 100))
             transaction_was_successful.send(sender=self,
                                             type="capture",
                                             response=response)
