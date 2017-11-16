@@ -1,6 +1,6 @@
 from django.conf import settings
 from django.conf.urls import include
-
+from django.conf.urls import url
 from paypal.standard.conf import POSTBACK_ENDPOINT, SANDBOX_POSTBACK_ENDPOINT
 from paypal.standard.models import (ST_PP_ACTIVE, ST_PP_CANCELED_REVERSAL,
                                     ST_PP_COMPLETED, ST_PP_CREATED,
@@ -48,7 +48,7 @@ class PayPalIntegration(Integration):
 
     def get_urls(self):
         urlpatterns = [
-            (r'^', include('paypal.standard.ipn.urls'))
+            url(r'^', include('paypal.standard.ipn.urls')),
         ]
         return urlpatterns
 
