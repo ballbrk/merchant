@@ -23,6 +23,7 @@ class StripeGateway(Gateway):
         self.stripe = stripe
 
     def purchase(self, amount, credit_card, options=None):
+        print ("Esto es amount "+str(amount))
         card = credit_card
         currency = self.default_currency.lower()
         if options and options.get('currency', False):

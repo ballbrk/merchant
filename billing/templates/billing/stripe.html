@@ -1,61 +1,356 @@
-{% load crispy_forms_tags %}
-
 <div class="payment-errors"></div>
 <script type="text/javascript" src="//code.jquery.com/jquery.min.js"></script>
-<script type="text/javascript" src="https://js.stripe.com/v1/"></script>
-<script type="text/javascript">
-$(document).ready(function() {
-  Stripe.setPublishableKey('{{ integration.publishable_key }}');
 
-  function stripeResponseHandler(status, response) {
-    if (response.error) {
-      $(".payment-errors").html(response.error.message);
-    } else {
-      console.log(response);
-      var token = response['id'];
-      $("#payment-form input[name=stripeToken]").val(token);
-      var redactedCCNum = "";
-      for (var ii=0; ii < 12; ii++) {
-          redactedCCNum += "x";
-      }
-      var originalCCNum = $("#stripe-form input[name=credit_card_number]").val();
-      redactedCCNum += originalCCNum.substring(originalCCNum.length-4, originalCCNum.length);
-      $("#payment-form input[name=redactedCCNum]").val(redactedCCNum);
-      var expMonth = $("#stripe-form input[name=credit_card_expiration_month]").val();
-      var expYear = $("#stripe-form input[name=credit_card_expiration_year]").val();
-      $("#payment-form input[name=credit_card_expiration_month]").val(expMonth);
-      $("#payment-form input[name=credit_card_expiration_year]").val(expYear);
-      $("#payment-form").get(0).submit();
+<script src="https://js.stripe.com/v3/"></script>
+<style>
+
+
+    .example.example4 * {
+        font-family: Interface, Open Sans, Segoe UI, sans-serif;
+        font-size: 15px;
+        font-weight: 500;
     }
-  }
 
-  $("#stripe-form").submit(function(event) {
-    $('.submit-button').attr("disabled", "disabled");
-    var amount = $('#id_amount').val(); //amount you want to charge in cents
-    Stripe.createToken({
-       number: $('#id_credit_card_number').val(),
-       cvc: $('#id_credit_card_cvc').val(),
-       exp_month: $('#id_credit_card_expiration_month').val(),
-       exp_year: $('#id_credit_card_expiration_year').val()
-    }, amount, stripeResponseHandler);
-    return false;
-  });
-});
-</script>
-<form class="form-horizontal well" method="post" id="stripe-form">
-    <fieldset>
-        <legend>Using Payment Backend: {{ title }}</legend>
-        {{ integration.generate_form|crispy }}
-        <div class="form-actions">
-            <button type="submit" class="btn btn-primary">Submit</button>
-            <button type="reset" class="btn">Cancel</button>
+    .example.example4 form {
+        max-width: 496px !important;
+        padding: 0 15px;
+    }
+
+    .example.example4 form > * + * {
+        margin-top: 20px;
+    }
+
+    .example.example4 .card_content {
+        background-color: #fff;
+        box-shadow: 0 4px 6px rgba(50, 50, 93, 0.11), 0 1px 3px rgba(0, 0, 0, 0.08);
+        border-radius: 4px;
+        padding: 3px;
+    }
+
+    .example.example4 fieldset {
+        border-style: none;
+        padding: 5px;
+        margin-left: -5px;
+        margin-right: -5px;
+        background: rgba(18, 91, 152, 0.05);
+        border-radius: 8px;
+    }
+
+    .example.example4 fieldset legend {
+        float: left;
+        width: 100%;
+        text-align: center;
+        font-size: 13px;
+        color: #8898aa;
+        padding: 3px 10px 7px;
+    }
+
+    .example.example4 .card-only {
+        display: block;
+    }
+
+    .example.example4 .payment-request-available {
+        display: none;
+    }
+
+    .example.example4 fieldset legend + * {
+        clear: both;
+    }
+
+    .example.example4 input, .example.example4 button {
+        -webkit-appearance: none;
+        -moz-appearance: none;
+        appearance: none;
+        outline: none;
+        border-style: none;
+        color: #fff;
+    }
+
+    .example.example4 input:-webkit-autofill {
+        transition: background-color 100000000s;
+        -webkit-animation: 1ms void-animation-out;
+    }
+
+    .example.example4 #example4-card {
+        padding: 10px;
+        margin-bottom: 2px;
+    }
+
+    .example.example4 input {
+        -webkit-animation: 1ms void-animation-out;
+    }
+
+    .example.example4 input::-webkit-input-placeholder {
+        color: #9bacc8;
+    }
+
+    .example.example4 input::-moz-placeholder {
+        color: #9bacc8;
+    }
+
+    .example.example4 input:-ms-input-placeholder {
+        color: #9bacc8;
+    }
+
+    .example.example4 button {
+        display: block;
+        width: 100%;
+        height: 37px;
+        background-color: #d782d9;
+        border-radius: 2px;
+        color: #fff;
+        cursor: pointer;
+    }
+
+    .example.example4 button:active {
+        background-color: #b76ac4;
+    }
+
+    .example.example4 .error svg .base {
+        fill: #e25950;
+    }
+
+    .example.example4 .error svg .glyph {
+        fill: #f6f9fc;
+    }
+
+    .example.example4 .error .message {
+        color: #e25950;
+    }
+
+    .example.example4 .success .icon .border {
+        stroke: #ffc7ee;
+    }
+
+    .example.example4 .success .icon .checkmark {
+        stroke: #d782d9;
+    }
+
+    .example.example4 .success .title {
+        color: #32325d;
+    }
+
+    .example.example4 .success .message {
+        color: #8898aa;
+    }
+
+    .example.example4 .success .reset path {
+        fill: #d782d9;
+    }
+
+</style>
+<div class="cell example example4">
+    <form>
+        <div id="example4-paymentRequest">
+            <!--Stripe paymentRequestButton Element inserted here-->
         </div>
-    </fieldset>
-</form>
+        <fieldset>
+            <legend class="card-only" data-tid="elements_examples.form.pay_with_card">Pay with card</legend>
+            <legend class="payment-request-available" data-tid="elements_examples.form.enter_card_manually">Or enter
+                card details
+            </legend>
+            <div class="card_content">
+                <div id="example4-card"></div>
+                <button type="submit" data-tid="elements_examples.form.donate_button">Pay</button>
+            </div>
+        </fieldset>
+        <div class="error" role="alert">
+            <svg xmlns="http://www.w3.org/2000/svg" width="17" height="17" viewBox="0 0 17 17">
+                <path class="base" fill="#000"
+                      d="M8.5,17 C3.80557963,17 0,13.1944204 0,8.5 C0,3.80557963 3.80557963,0 8.5,0 C13.1944204,0 17,3.80557963 17,8.5 C17,13.1944204 13.1944204,17 8.5,17 Z"/>
+                <path class="glyph" fill="#FFF"
+                      d="M8.5,7.29791847 L6.12604076,4.92395924 C5.79409512,4.59201359 5.25590488,4.59201359 4.92395924,4.92395924 C4.59201359,5.25590488 4.59201359,5.79409512 4.92395924,6.12604076 L7.29791847,8.5 L4.92395924,10.8739592 C4.59201359,11.2059049 4.59201359,11.7440951 4.92395924,12.0760408 C5.25590488,12.4079864 5.79409512,12.4079864 6.12604076,12.0760408 L8.5,9.70208153 L10.8739592,12.0760408 C11.2059049,12.4079864 11.7440951,12.4079864 12.0760408,12.0760408 C12.4079864,11.7440951 12.4079864,11.2059049 12.0760408,10.8739592 L9.70208153,8.5 L12.0760408,6.12604076 C12.4079864,5.79409512 12.4079864,5.25590488 12.0760408,4.92395924 C11.7440951,4.59201359 11.2059049,4.59201359 10.8739592,4.92395924 L8.5,7.29791847 L8.5,7.29791847 Z"/>
+            </svg>
+            <span class="message"></span></div>
+    </form>
 
-<form method="post" style="display:none;" action="{% url 'stripe_transaction' %}" id="payment-form">{% csrf_token %}
-  <input type="hidden" name="credit_card_expiration_month" value="" />
-  <input type="hidden" name="credit_card_expiration_year" value="" />
-  <input type="hidden" name="redactedCCNumber" value="" />
-  <input type="hidden" name="stripeToken" value="" />
-</form>
+
+    <form method="post" style="display:none;" action="{% url 'stripe_transaction' %}" id="payment-form">
+        <input type='hidden' name='csrfmiddlewaretoken' value='{{ integration.fields.csrf_token_value }}'/>
+        <input type="hidden" name="invoice" value="{{ integration.fields.invoice }}"/>
+        <input type="hidden" name="stripeToken" value=""/>
+        <input type="hidden" name="checksum" value="{{ integration.fields.checksum }}"/>
+        <input type="hidden" name="amount" value="{{ integration.fields.amount }}"/>
+    </form>
+
+</div>
+
+<script type="text/javascript">
+    (function () {
+        'use strict';
+
+        var stripe = Stripe('{{ integration.publishable_key }}');
+
+        function registerElements(elements, exampleName) {
+            var formClass = '.' + exampleName;
+            var example = document.querySelector(formClass);
+
+            var form = example.querySelector('form');
+            var resetButton = example.querySelector('a.reset');
+            var error = form.querySelector('.error');
+            var errorMessage = error.querySelector('.message');
+
+            function enableInputs() {
+                Array.prototype.forEach.call(
+                    form.querySelectorAll(
+                        "input[type='text'], input[type='email'], input[type='tel']"
+                    ),
+                    function (input) {
+                        input.removeAttribute('disabled');
+                    }
+                );
+            }
+
+            function disableInputs() {
+                Array.prototype.forEach.call(
+                    form.querySelectorAll(
+                        "input[type='text'], input[type='email'], input[type='tel']"
+                    ),
+                    function (input) {
+                        input.setAttribute('disabled', 'true');
+                    }
+                );
+            }
+
+            // Listen for errors from each Element, and show error messages in the UI.
+            elements.forEach(function (element) {
+                element.on('change', function (event) {
+                    if (event.error) {
+                        error.classList.add('visible');
+                        errorMessage.innerText = event.error.message;
+                    } else {
+                        error.classList.remove('visible');
+                    }
+                });
+            });
+
+            // Listen on the form's 'submit' handler...
+            form.addEventListener('submit', function (e) {
+                e.preventDefault();
+
+                // Show a loading screen...
+                example.classList.add('submitting');
+
+                // Disable all inputs.
+                disableInputs();
+                stripe.createToken(elements[0]).then(function (result) {
+                    // Stop loading!
+                    example.classList.remove('submitting');
+                    if (result.token) {
+
+                        $("#payment-form input[name=stripeToken]").val(result.token.id);
+                        $("#payment-form").get(0).submit();
+                        example.classList.add('submitted');
+                    } else {
+                        // Otherwise, un-disable inputs.
+                        enableInputs();
+                    }
+                });
+            });
+
+
+        }
+
+        var elements = stripe.elements({
+            fonts: [
+                {
+                    cssSrc: "https://rsms.me/inter/inter-ui.css"
+                }
+            ],
+            // Stripe's examples are localized to specific languages, but if
+            // you wish to have Elements automatically detect your user's locale,
+            // use `locale: 'auto'` instead.
+            locale: window.__exampleLocale
+        });
+
+        /**
+         * Card Element
+         */
+        var card = elements.create("card", {
+            hidePostalCode: true,
+            style: {
+                base: {
+                    color: "#32325D",
+                    fontWeight: 500,
+                    fontFamily: "Inter UI, Open Sans, Segoe UI, sans-serif",
+                    fontSize: "15px",
+                    fontSmoothing: "antialiased",
+
+                    "::placeholder": {
+                        color: "#CFD7DF"
+                    }
+                },
+                invalid: {
+                    color: "#E25950"
+                }
+            }
+        });
+
+        card.mount("#example4-card");
+
+        /**
+         * Payment Request Element
+         */
+        var paymentRequest = stripe.paymentRequest({
+            country: "{{ integration.fields.country }}",
+            currency: "{{ integration.fields.currency_code |lower }}",
+            total: {
+                amount: {{ integration.fields.amount }},
+                label: "Total"
+            }
+        });
+        paymentRequest.on("token", function (result) {
+            var example = document.querySelector(".example4");
+            example.querySelector(".token").innerText = result.token.id;
+            example.classList.add("submitted");
+            result.complete("success");
+        });
+
+        paymentRequest.on('token', function (ev) {
+            // Send the token to your server to charge it!
+            fetch('/charges', {
+                method: 'POST',
+                body: JSON.stringify({
+                    token: ev.token.id,
+                    invoice:{{integration.fields.invoice}}
+                }),
+            })
+                .then(function (response) {
+                    if (response.ok) {
+                        // Report to the browser that the payment was successful, prompting
+                        // it to close the browser payment interface.
+                        ev.complete('success');
+                    } else {
+                        // Report to the browser that the payment failed, prompting it to
+                        // re-show the payment interface, or show an error message and close
+                        // the payment interface.
+                        ev.complete('fail');
+                    }
+                });
+        });
+
+
+        var paymentRequestElement = elements.create("paymentRequestButton", {
+            paymentRequest: paymentRequest,
+            style: {
+                paymentRequestButton: {
+                    type: "pay"
+                }
+            }
+        });
+
+        paymentRequest.canMakePayment().then(function (result) {
+            if (result) {
+                document.querySelector(".example4 .card-only").style.display = "none";
+                document.querySelector(
+                    ".example4 .payment-request-available"
+                ).style.display =
+                    "block";
+                paymentRequestElement.mount("#example4-paymentRequest");
+            }
+        });
+
+        registerElements([card, paymentRequestElement], "example4");
+    })();
+
+</script>
