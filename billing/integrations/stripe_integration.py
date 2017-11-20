@@ -1,7 +1,14 @@
-from billing import Integration, get_gateway, IntegrationNotConfigured
 from django.conf import settings
 from django.conf.urls import url
+from django.utils.decorators import method_decorator
+from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.http import require_POST
+
+from billing import Integration, get_gateway, IntegrationNotConfigured
 from billing.forms.stripe_forms import StripeForm
+
+csrf_exempt_m = method_decorator(csrf_exempt)
+require_POST_m = method_decorator(require_POST)
 
 
 class StripeIntegration(Integration):
@@ -13,7 +20,7 @@ class StripeIntegration(Integration):
         merchant_settings = getattr(settings, "MERCHANT_SETTINGS")
         if not merchant_settings or not merchant_settings.get("stripe"):
             raise IntegrationNotConfigured("The '%s' integration is not correctly "
-                                       "configured." % self.display_name)
+                                           "configured." % self.display_name)
         stripe_settings = merchant_settings["stripe"]
         self.gateway = get_gateway("stripe")
         self.publishable_key = stripe_settings['PUBLISHABLE_KEY']
@@ -30,8 +37,13 @@ class StripeIntegration(Integration):
         # Subclasses must override this
         raise NotImplementedError
 
+    def notify_handler(self, request):
+        # Subclasses must override this
+        raise NotImplementedError
+
     def get_urls(self):
         urlpatterns = [
-           url('^stripe_token/$', self.transaction, name="stripe_transaction")
+            url('^stripe_token/$', self.transaction, name="stripe_transaction"),
+            url('^webhook/$', self.notify_handler, name="stripe_webhook")
         ]
         return urlpatterns

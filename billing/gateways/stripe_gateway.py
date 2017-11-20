@@ -23,7 +23,6 @@ class StripeGateway(Gateway):
         self.stripe = stripe
 
     def purchase(self, amount, credit_card, options=None):
-        print ("Esto es amount "+str(amount))
         card = credit_card
         currency = self.default_currency.lower()
         if options and options.get('currency', False):
@@ -47,11 +46,11 @@ class StripeGateway(Gateway):
                 api_key=self.api_key)
         except self.stripe.CardError as error:
             transaction_was_unsuccessful.send(sender=self,
-                                              type="purchase",
+                                              transaction_type="purchase",
                                               response=error)
             return {'status': 'FAILURE', 'response': error}
         transaction_was_successful.send(sender=self,
-                                        type="purchase",
+                                        transaction_type="purchase",
                                         response=response)
         return {'status': 'SUCCESS', 'response': response}
 
@@ -70,11 +69,11 @@ class StripeGateway(Gateway):
             customer = self.stripe.Customer.create(card=card, api_key=self.api_key)
         except (self.stripe.CardError, self.stripe.InvalidRequestError) as error:
             transaction_was_unsuccessful.send(sender=self,
-                                              type="store",
+                                              transaction_type="store",
                                               response=error)
             return {'status': 'FAILURE', 'response': error}
         transaction_was_successful.send(sender=self,
-                                        type="store",
+                                        transaction_type="store",
                                         response=customer)
         return {'status': 'SUCCESS', 'response': customer}
 
@@ -99,22 +98,22 @@ class StripeGateway(Gateway):
                     api_key=self.api_key
                 )
                 transaction_was_successful.send(sender=self,
-                                                type="recurring",
+                                                transaction_type="recurring",
                                                 response=response)
                 return {"status": "SUCCESS", "response": response}
             except self.stripe.CardError as error:
                 transaction_was_unsuccessful.send(sender=self,
-                                                  type="recurring",
+                                                  transaction_type="recurring",
                                                   response=error)
                 return {"status": "FAILURE", "response": error}
         except self.stripe.InvalidRequestError as error:
             transaction_was_unsuccessful.send(sender=self,
-                                              type="recurring",
+                                              transaction_type="recurring",
                                               response=error)
             return {"status": "FAILURE", "response": error}
         except TypeError as error:
             transaction_was_unsuccessful.send(sender=self,
-                                              type="recurring",
+                                              transaction_type="recurring",
                                               response=error)
             return {"status": "FAILURE", "response": "Missing Plan Id"}
 
@@ -123,12 +122,12 @@ class StripeGateway(Gateway):
             customer = self.stripe.Customer.retrieve(identification, api_key=self.api_key)
             response = customer.delete()
             transaction_was_successful.send(sender=self,
-                                              type="unstore",
+                                              transaction_type="unstore",
                                               response=response)
             return {"status": "SUCCESS", "response": response}
         except self.stripe.InvalidRequestError as error:
             transaction_was_unsuccessful.send(sender=self,
-                                              type="unstore",
+                                              transaction_type="unstore",
                                               response=error)
             return {"status": "FAILURE", "response": error}
 
@@ -139,12 +138,12 @@ class StripeGateway(Gateway):
                 money = int(money * 100)
             response = charge.refund(amount=money)
             transaction_was_successful.send(sender=self,
-                                            type="credit",
+                                            transaction_type="credit",
                                             response=response)
             return {"status": "SUCCESS", "response": response}
         except self.stripe.InvalidRequestError as error:
             transaction_was_unsuccessful.send(sender=self,
-                                              type="credit",
+                                              transaction_type="credit",
                                               response=error)
             return {"status": "FAILURE", "error": error}
 
@@ -170,12 +169,12 @@ class StripeGateway(Gateway):
                 capture=False,
                 api_key=self.api_key)
             transaction_was_successful.send(sender=self,
-                                            type="authorize",
+                                            transaction_type="authorize",
                                             response=response)
             return {'status': "SUCCESS", "response": response}
         except self.stripe.CardError as error:
             transaction_was_unsuccessful.send(sender=self,
-                                              type="purchase",
+                                              transaction_type="purchase",
                                               response=error)
             return {'status': 'FAILURE', 'response': error}
 
@@ -185,11 +184,11 @@ class StripeGateway(Gateway):
                                                  api_key=self.api_key)
             response = charge.capture(amount=int(money * 100))
             transaction_was_successful.send(sender=self,
-                                            type="capture",
+                                            transaction_type="capture",
                                             response=response)
             return {'status': "SUCCESS", "response": response}
         except self.stripe.InvalidRequestError as error:
             transaction_was_unsuccessful.send(sender=self,
-                                              type="capture",
+                                              transaction_type="capture",
                                               response=error)
             return {"status": "FAILURE", "response": error}

@@ -81,11 +81,11 @@ class PayPalGateway(Gateway):
         try:
             response = wpp.doDirectPayment(params)
             transaction_was_successful.send(sender=self,
-                                            type="purchase",
+                                            transaction_type="purchase",
                                             response=response)
         except PayPalFailure as e:
             transaction_was_unsuccessful.send(sender=self,
-                                              type="purchase",
+                                              transaction_type="purchase",
                                               response=e)
             # Slight skewness because of the way django-paypal
             # is implemented.
@@ -129,11 +129,11 @@ class PayPalGateway(Gateway):
         try:
             response = wpp.createRecurringPaymentsProfile(params, direct=True)
             transaction_was_successful.send(sender=self,
-                                            type="purchase",
+                                            transaction_type="purchase",
                                             response=response)
         except PayPalFailure as e:
             transaction_was_unsuccessful.send(sender=self,
-                                              type="purchase",
+                                              transaction_type="purchase",
                                               response=e)
             # Slight skewness because of the way django-paypal
             # is implemented.

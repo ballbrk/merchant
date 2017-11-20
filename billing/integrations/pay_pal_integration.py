@@ -2,16 +2,17 @@ from django.conf import settings
 from django.conf.urls import include
 from django.conf.urls import url
 from paypal.standard.conf import POSTBACK_ENDPOINT, SANDBOX_POSTBACK_ENDPOINT
+from paypal.standard.ipn.signals import valid_ipn_received
 from paypal.standard.models import (ST_PP_ACTIVE, ST_PP_CANCELED_REVERSAL,
                                     ST_PP_COMPLETED, ST_PP_CREATED,
                                     ST_PP_PAID, ST_PP_PENDING,
                                     ST_PP_PROCESSED, ST_PP_REFUNDED,
                                     ST_PP_REWARDED, ST_PP_VOIDED)
-from paypal.standard.ipn.signals import valid_ipn_received
 
 from billing import Integration, IntegrationNotConfigured
 from billing.forms.paypal_forms import (MerchantPayPalPaymentsForm,
                                         MerchantPayPalEncryptedPaymentsForm)
+from billing.models import Order
 from billing.signals import (transaction_was_successful,
                              transaction_was_unsuccessful)
 
@@ -62,7 +63,14 @@ class PayPalIntegration(Integration):
 
 
 def txn_handler(sender, **kwargs):
-    if sender.payment_status in [
+    try:
+        print(type(sender))
+        order = Order.objects.get(pk=int(sender.invoice))
+        order.content_object = sender
+
+        print(order)
+
+        if sender.payment_status in [
             ST_PP_ACTIVE,
             ST_PP_CANCELED_REVERSAL,
             ST_PP_COMPLETED,
@@ -73,20 +81,36 @@ def txn_handler(sender, **kwargs):
             ST_PP_REFUNDED,
             ST_PP_REWARDED,
             ST_PP_VOIDED
-    ]:
-        successful_txn_handler(sender, **kwargs)
-    else:
-        unsuccessful_txn_handler(sender, **kwargs)
+        ]:
+            order.finish()
+            order.save()
+            # successful_txn_handler(sender, **kwargs)
+        else:
+            order.canceled()
+            order.save()
+            # unsuccessful_txn_handler(sender, **kwargs)
+    except Order.DoesNotExist:
+        print("No existe la orden")
+        # unsuccessful_txn_handler(sender, **kwargs)
+        pass
+    except Order.MultipleObjectsReturned:
+        # unsuccessful_txn_handler(sender, **kwargs)
+        pass
+    except BaseException as e:
+        print(e)
+        pass
+
 
 def unsuccessful_txn_handler(sender, **kwargs):
     transaction_was_unsuccessful.send(sender=sender.__class__,
-                                      type="purchase",
+                                      transaction_type="purchase",
                                       response=sender)
 
 
 def successful_txn_handler(sender, **kwargs):
     transaction_was_successful.send(sender=sender.__class__,
-                                    type="purchase",
+                                    transaction_type="purchase",
                                     response=sender)
+
 
 valid_ipn_received.connect(txn_handler)
