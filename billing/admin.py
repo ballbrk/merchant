@@ -7,7 +7,7 @@ admin.site.register(billing_models.GCNewOrderNotification)
 admin.site.register(billing_models.AuthorizeAIMResponse)
 admin.site.register(billing_models.WorldPayResponse)
 admin.site.register(billing_models.AmazonFPSResponse)
-
+admin.site.register(billing_models.StripeTransaction)
 
 class OrderAdmin(FSMTransitionMixin, admin.ModelAdmin):
     list_display = ('id', 'amount', 'state', 'created', 'modified')

@@ -64,11 +64,9 @@ class PayPalIntegration(Integration):
 
 def txn_handler(sender, **kwargs):
     try:
-        print(type(sender))
+
         order = Order.objects.get(pk=int(sender.invoice))
         order.content_object = sender
-
-        print(order)
 
         if sender.payment_status in [
             ST_PP_ACTIVE,

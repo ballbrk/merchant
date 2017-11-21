@@ -22,6 +22,8 @@ class State(object):
     NO_VALID = 'No Valid'
     CANCELED = 'Canceled'
     RETURNED = 'Returned'
+    ERROR = 'Error'
+
 
     CHOICES = (
         (NEW, _("New")),
@@ -29,6 +31,7 @@ class State(object):
         (NO_VALID, _("No Valid")),
         (CANCELED, _("Canceled")),
         (RETURNED, _("Returned")),
+        (ERROR, _("Error")),
     )
 
 
