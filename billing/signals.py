@@ -16,7 +16,7 @@ transaction_was_unsuccessful.__doc__ = """
 Sent after order was returned (product, account,order)
 """
 
-order_canceled = Signal(providing_args=['product','user','instance'])
+order_canceled = Signal(providing_args=['invoice'])
 order_canceled.__doc__ = """
 Sent after order was canceled (product, account,order)
 """

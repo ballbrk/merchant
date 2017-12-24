@@ -1,5 +1,3 @@
-import json
-
 import stripe
 from django.conf import settings
 
@@ -9,6 +7,7 @@ from billing.models.stripe_models import StripeTransaction
 from billing.signals import transaction_was_successful, transaction_was_unsuccessful
 from billing.utils.credit_card import InvalidCard, Visa, MasterCard, \
     AmericanExpress, Discover, CreditCard
+from cart.cart import Cart
 
 
 class StripeGateway(Gateway):
@@ -56,6 +55,9 @@ class StripeGateway(Gateway):
             stripe_transaction.txn_id = response['id']
             stripe_transaction.info = response
             stripe_transaction.save()
+
+
+
         except self.stripe.CardError as error:
             stripe_transaction.payment_status = State.ERROR
             stripe_transaction.payment_message = error

@@ -1,3 +1,4 @@
+{% load l10n %}
 <div class="payment-errors"></div>
 <script type="text/javascript" src="//code.jquery.com/jquery.min.js"></script>
 
@@ -164,7 +165,7 @@
             <span class="message"></span></div>
     </form>
 
-
+{% localize off %}
     <form method="post" style="display:none;" action="{% url 'stripe_transaction' %}" id="payment-form">
         <input type='hidden' name='csrfmiddlewaretoken' value='{{ integration.fields.csrf_token_value }}'/>
         <input type="hidden" name="invoice" value="{{ integration.fields.invoice }}"/>
@@ -174,6 +175,8 @@
     </form>
 
 </div>
+
+
 
 <script type="text/javascript">
     (function () {
@@ -291,6 +294,8 @@
         /**
          * Payment Request Element
          */
+
+
         var paymentRequest = stripe.paymentRequest({
             country: "{{ integration.fields.country }}",
             currency: "{{ integration.fields.currency_code |lower }}",
@@ -354,3 +359,5 @@
     })();
 
 </script>
+
+{% endlocalize %}

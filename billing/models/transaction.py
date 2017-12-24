@@ -1,6 +1,6 @@
 # !/usr/bin/env python
 # -*- coding: utf-8 -*-
-
+import uuid
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
 from django.db import models
@@ -24,7 +24,6 @@ class State(object):
     RETURNED = 'Returned'
     ERROR = 'Error'
 
-
     CHOICES = (
         (NEW, _("New")),
         (COMPLETED, _("Completed")),
@@ -36,7 +35,8 @@ class State(object):
 
 
 class Order(TimeStampedModel):
-    content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE, null=True,related_name='billing_order')
+    id = models.UUIDField(primary_key=True, default=None, editable=False)
+    content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE, null=True, related_name='billing_order')
     object_id = models.PositiveIntegerField(null=True)
     content_object = GenericForeignKey('content_type', 'object_id')
     amount = MoneyField(max_digits=10, decimal_places=2, default_currency='EUR')
@@ -54,8 +54,12 @@ class Order(TimeStampedModel):
     def __str__(self):
         return "%s" % self.id
 
+    def set_pk(self):
+        self.pk = uuid.uuid4()
+
     def save(self, **kwargs):
         if self.pk is None:
+            self.set_pk()
             transaction_started.send(sender=self.__class__)
         super(self.__class__, self).save(**kwargs)
 

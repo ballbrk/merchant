@@ -10,7 +10,7 @@ admin.site.register(billing_models.AmazonFPSResponse)
 admin.site.register(billing_models.StripeTransaction)
 
 class OrderAdmin(FSMTransitionMixin, admin.ModelAdmin):
-    list_display = ('id', 'amount', 'state', 'created', 'modified')
+    list_display = ('id', 'amount', 'state', 'created', 'modified','content_type')
     list_filter = ('state',)
     readonly_fields = ('state',)
 

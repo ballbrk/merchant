@@ -82,11 +82,15 @@ def txn_handler(sender, **kwargs):
         ]:
             order.finish()
             order.save()
-            # successful_txn_handler(sender, **kwargs)
+            # Marcamos la orden como procesada
+            order.cart_order.checked_out = True
+            order.cart_order.save()
+
+
         else:
             order.canceled()
+
             order.save()
-            # unsuccessful_txn_handler(sender, **kwargs)
     except Order.DoesNotExist:
         print("No existe la orden")
         # unsuccessful_txn_handler(sender, **kwargs)

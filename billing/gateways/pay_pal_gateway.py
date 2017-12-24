@@ -1,14 +1,13 @@
 import datetime
 
-from paypal.pro.helpers import PayPalWPP
-from paypal.pro.exceptions import PayPalFailure
-
 from django.conf import settings
+from paypal.pro.exceptions import PayPalFailure
+from paypal.pro.helpers import PayPalWPP
 
 from billing import Gateway, GatewayNotConfigured
+from billing.signals import transaction_was_successful, transaction_was_unsuccessful
 from billing.utils.credit_card import (Visa, MasterCard, AmericanExpress,
                                        Discover, InvalidCard)
-from billing.signals import transaction_was_successful, transaction_was_unsuccessful
 
 
 class PayPalGateway(Gateway):

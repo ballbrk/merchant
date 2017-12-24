@@ -1,5 +1,8 @@
-{% if integration.test_mode %}
-    {{ integration.generate_form.sandbox }}
-{% else %}
-    {{ integration.generate_form.render }}
-{% endif %}
+{% load l10n %}
+{% localize off %}
+    {% if integration.test_mode %}
+        {{ integration.generate_form.sandbox }}
+    {% else %}
+        {{ integration.generate_form.render }}
+    {% endif %}
+{% endlocalize %}
