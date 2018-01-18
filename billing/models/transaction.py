@@ -8,7 +8,7 @@ from django.utils.translation import ugettext as _
 from django_extensions.db.models import TimeStampedModel
 from django_fsm import FSMField, transition
 from djmoney.models.fields import MoneyField
-
+from django.conf import settings
 from ..signals import *
 
 
@@ -36,10 +36,13 @@ class State(object):
 
 class Order(TimeStampedModel):
     id = models.UUIDField(primary_key=True, default=None, editable=False)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL,null=True)
     content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE, null=True, related_name='billing_order')
     object_id = models.PositiveIntegerField(null=True)
     content_object = GenericForeignKey('content_type', 'object_id')
     amount = MoneyField(max_digits=10, decimal_places=2, default_currency='EUR')
+    base_amount = MoneyField(max_digits=10, decimal_places=2, default_currency='EUR')
+    tax_amount = MoneyField(max_digits=10, decimal_places=2, default_currency='EUR')
     state = FSMField(default=State.NEW,
                      verbose_name=_(u'Order State'),
                      choices=State.CHOICES,
@@ -47,7 +50,7 @@ class Order(TimeStampedModel):
                      db_index=True)
 
     class Meta:
-        ordering = ('id',)
+        ordering = ('-created',)
         verbose_name = _('Order')
         verbose_name_plural = _('Orders')
 

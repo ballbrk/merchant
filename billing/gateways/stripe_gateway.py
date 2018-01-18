@@ -41,9 +41,10 @@ class StripeGateway(Gateway):
                 'exp_year': credit_card.year,
                 'cvc': credit_card.verification_value
             }
-        order = Order.objects.get(pk=int(metadata['invoice']))
         stripe_transaction = StripeTransaction()
         try:
+            print(metadata['invoice'])
+            order = Order.objects.get(pk = metadata['invoice'])
             response = self.stripe.Charge.create(
                 amount=int(amount * 100),
                 currency=currency,
@@ -56,8 +57,10 @@ class StripeGateway(Gateway):
             stripe_transaction.info = response
             stripe_transaction.save()
 
-
-
+            order.content_object = stripe_transaction
+            order.finish()
+            order.save()
+            return {'status': 'SUCCESS', 'response': response}
         except self.stripe.CardError as error:
             stripe_transaction.payment_status = State.ERROR
             stripe_transaction.payment_message = error
@@ -68,10 +71,7 @@ class StripeGateway(Gateway):
             order.save()
             return {'status': 'FAILURE', 'response': error}
 
-        order.content_object = stripe_transaction
-        order.finish()
-        order.save()
-        return {'status': 'SUCCESS', 'response': response}
+
 
     def store(self, credit_card, options=None):
         card = credit_card
